@@ -1,262 +1,653 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Versículo do Dia</title>
-<style>
-* { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; font-family: Georgia, serif; overflow: hidden; background: #000; }
-.fundo { position: fixed; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 1s ease; transform: scale(1.05); }
-.fundo.visivel { opacity: 1; animation: zoomLento 20s ease-out forwards; }
-@keyframes zoomLento { from { transform: scale(1.05); } to { transform: scale(1.15); } }
-#escurecer { position: fixed; inset: 0; background: rgba(0,0,0,0.45); transition: background 0.6s ease; }
-body.claro #escurecer { background: rgba(255,255,255,0.35); }
-#conteudo { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 32px; color: #fff; transition: color 0.6s ease; }
-body.claro #conteudo { color: #1a1a1a; }
-#abertura { font-size: clamp(1rem, 2vw, 1.4rem); letter-spacing: 2px; text-transform: uppercase; margin: 0 0 24px; opacity: 0.85; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-body.claro #abertura, body.claro #texto, body.claro #referencia { text-shadow: 0 2px 8px rgba(255,255,255,0.7); }
-#bloco-versiculo { transition: opacity 0.6s ease, transform 0.6s ease; }
-#bloco-versiculo.saindo { opacity: 0; transform: translateY(15px); }
-#texto { font-size: clamp(1.6rem, 4vw, 3rem); line-height: 1.4; max-width: 900px; margin: 0 0 16px; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
-#referencia { font-size: clamp(1.1rem, 2vw, 1.6rem); font-weight: bold; margin: 0 0 32px; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
-button { background: rgba(255,255,255,0.2); color: inherit; border: 1px solid rgba(255,255,255,0.6); padding: 12px 22px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; margin: 6px; backdrop-filter: blur(4px); transition: background 0.2s, transform 0.2s; }
-body.claro button { background: rgba(0,0,0,0.12); border-color: rgba(0,0,0,0.4); }
-button:hover { background: rgba(255,255,255,0.35); transform: translateY(-2px); }
-body.claro button:hover { background: rgba(0,0,0,0.22); }
-button:active { transform: scale(0.96); }
-#topo { position: fixed; top: 16px; right: 16px; z-index: 5; display: flex; gap: 8px; }
-#topo button { margin: 0; color: #fff; }
-body.claro #topo button { color: #1a1a1a; }
-#aviso { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px; border-radius: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; z-index: 20; }
-#aviso.mostrar { opacity: 1; transform: translateX(-50%) translateY(0); }
-#painel { position: fixed; top: 0; right: -420px; width: 400px; max-width: 90%; height: 100%; background: #fff; color: #333; padding: 20px; overflow-y: auto; box-shadow: -4px 0 16px rgba(0,0,0,0.3); transition: right 0.35s ease; z-index: 10; }
-#painel.aberto { right: 0; }
-#painel h2 { margin-top: 0; }
-#painel button { background: #7a5c2e; color: #fff; border: none; margin: 0; }
-#lista-favoritos { list-style: none; padding: 0; }
-#lista-favoritos li { background: #f4efe6; margin-bottom: 10px; padding: 14px; border-radius: 8px; animation: entrar 0.3s ease; }
-@keyframes entrar { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-#lista-favoritos small { display: block; color: #7a5c2e; font-weight: bold; margin-top: 6px; }
-.remover { background: #b04a3a !important; padding: 4px 10px; font-size: 0.8rem; margin-top: 8px !important; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Versículo do Dia</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: Georgia, serif;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* Duas camadas de imagem para fazer o crossfade suave */
+    .fundo {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1s ease;
+      transform: scale(1.05);
+    }
+    .fundo.visivel {
+      opacity: 1;
+      animation: zoomLento 20s ease-out forwards;
+    }
+    @keyframes zoomLento {
+      from { transform: scale(1.05); }
+      to   { transform: scale(1.15); }
+    }
+    #escurecer {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+    }
+
+    #conteudo {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 32px;
+      color: #fff;
+      overflow-y: auto;
+    }
+    #bloco-versiculo {
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    #bloco-versiculo.saindo {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    #texto {
+      font-size: clamp(1.6rem, 4vw, 3rem);
+      line-height: 1.4;
+      max-width: 900px;
+      margin: 0 0 16px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+    #referencia {
+      font-size: clamp(1.1rem, 2vw, 1.6rem);
+      font-weight: bold;
+      margin: 0 0 32px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+
+    button {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.6);
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin: 6px;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s, transform 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.35); transform: translateY(-2px); }
+    button:active { transform: scale(0.96); }
+    .controles-audio {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 8px 14px;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(4px);
+    }
+    .controles-audio label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font: 0.95rem Arial, sans-serif;
+    }
+    .controles-audio select,
+    .controles-audio input {
+      max-width: 180px;
+      accent-color: #d7b778;
+    }
+    .controles-audio select {
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 6px;
+      color: #fff;
+      background: #282828;
+    }
+    .controles-audio input[type="range"] { width: 100px; }
+    #btn-abrir-favoritos {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      margin: 0;
+      z-index: 5;
+    }
+
+    #aviso {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 20;
+    }
+    #aviso.mostrar {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #painel {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      max-width: 90%;
+      height: 100%;
+      background: #fff;
+      color: #333;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: -4px 0 16px rgba(0,0,0,0.3);
+      transition: right 0.35s ease;
+      z-index: 10;
+    }
+    #painel.aberto { right: 0; }
+    #painel h2 { margin-top: 0; }
+    #painel button {
+      background: #7a5c2e;
+      border: none;
+      margin: 0;
+    }
+    #lista-favoritos { list-style: none; padding: 0; }
+    #lista-favoritos li {
+      background: #f4efe6;
+      margin-bottom: 10px;
+      padding: 14px;
+      border-radius: 8px;
+      animation: entrar 0.3s ease;
+    }
+    @keyframes entrar {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    #lista-favoritos small { display: block; color: #7a5c2e; font-weight: bold; margin-top: 6px; }
+    .remover { background: #b04a3a !important; padding: 4px 10px; font-size: 0.8rem; margin-top: 8px !important; }
+  </style>
 </head>
 <body>
-<div class="fundo" id="fundo1"></div>
-<div class="fundo" id="fundo2"></div>
-<div id="escurecer"></div>
+  <div class="fundo" id="fundo1"></div>
+  <div class="fundo" id="fundo2"></div>
+  <div id="escurecer"></div>
 
-<div id="topo">
-  <button id="btn-tema">🌙 Tema</button>
   <button id="btn-abrir-favoritos">⭐ Favoritos</button>
-</div>
 
-<div id="conteudo">
-  <p id="abertura"></p>
-  <div id="bloco-versiculo">
-    <p id="texto"></p>
-    <p id="referencia"></p>
+  <div id="conteudo">
+    <div id="bloco-versiculo" aria-live="polite">
+      <p id="texto"></p>
+      <p id="referencia"></p>
+    </div>
+    <div>
+      <button id="btn-novo">Sortear outro</button>
+      <button id="btn-favoritar">Favoritar ⭐</button>
+      <button id="btn-compartilhar">Compartilhar 📋</button>
+    </div>
+    <div class="controles-audio">
+      <label for="idioma"><span id="rotulo-idioma">Idioma</span>
+        <select id="idioma">
+          <option value="pt">Português</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+        </select>
+      </label>
+      <button id="btn-ouvir" type="button">🔊 Ouvir</button>
+      <label for="voz"><span id="rotulo-voz">Voz</span>
+        <select id="voz"><option value="">Automática</option></select>
+      </label>
+      <label for="velocidade"><span id="rotulo-velocidade">Velocidade</span>
+        <input id="velocidade" type="range" min="0.6" max="1.6" step="0.1" value="1">
+        <output id="velocidade-valor" for="velocidade">1×</output>
+      </label>
+    </div>
   </div>
-  <div>
-    <button id="btn-novo">Sortear outro</button>
-    <button id="btn-favoritar">Favoritar ⭐</button>
-    <button id="btn-compartilhar">Compartilhar 📋</button>
+
+  <div id="painel">
+    <button id="btn-fechar">Fechar ✕</button>
+    <h2 id="painel-titulo">Meus favoritos</h2>
+    <ul id="lista-favoritos"></ul>
   </div>
-</div>
 
-<div id="painel">
-  <button id="btn-fechar">Fechar ✕</button>
-  <h2>Meus favoritos</h2>
-  <ul id="lista-favoritos"></ul>
-</div>
+  <div id="aviso"></div>
 
-<div id="aviso"></div>
+  <script>
+    // Cada versículo tem sua própria imagem (link de foto da internet).
+    // Se alguma imagem não carregar, é só trocar o link por outro.
+    const U = "https://images.unsplash.com/";
+    const versiculos = [
+      { texto: "O Senhor é o meu pastor; nada me faltará.", referencia: "Salmos 23:1", imagem: U + "photo-1500382017468-9049fed747ef?w=1920" },
+      { texto: "Tudo posso naquele que me fortalece.", referencia: "Filipenses 4:13", imagem: U + "photo-1506905925346-21bda4d32df4?w=1920" },
+      { texto: "Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.", referencia: "Salmos 37:5", imagem: U + "photo-1469474968028-56623f02e42e?w=1920" },
+      { texto: "Não temas, porque eu sou contigo; não te assombres, porque eu sou o teu Deus.", referencia: "Isaías 41:10", imagem: U + "photo-1470071459604-3b5ec3a7fe05?w=1920" },
+      { texto: "Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.", referencia: "Salmos 119:105", imagem: U + "photo-1472214103451-9374bd1c798e?w=1920" },
+      { texto: "Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento.", referencia: "Provérbios 3:5", imagem: U + "photo-1441974231531-c6227db76b6e?w=1920" },
+      { texto: "Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.", referencia: "Mateus 11:28", imagem: U + "photo-1507525428034-b723cf961d3e?w=1920" },
+      { texto: "O amor é paciente, o amor é bondoso.", referencia: "1 Coríntios 13:4", imagem: U + "photo-1501785888041-af3ef285b470?w=1920" },
+      { texto: "Seja forte e corajoso! Não se apavore, pois o Senhor, o seu Deus, estará com você por onde você andar.", referencia: "Josué 1:9", imagem: U + "photo-1464822759023-fed622ff2c3b?w=1920" },
+      { texto: "Deixo-vos a paz, a minha paz vos dou.", referencia: "João 14:27", imagem: U + "photo-1476514525535-07fb3b4ae5f1?w=1920" },
+      { texto: "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna.", referencia: "João 3:16", imagem: U + "photo-1518837695005-2083093ee35b?w=1920" },
+      { texto: "Alegrai-vos sempre no Senhor; outra vez digo: alegrai-vos.", referencia: "Filipenses 4:4", imagem: U + "photo-1490730141103-6cac27aaab94?w=1920" },
+      { texto: "Lancem sobre ele toda a sua ansiedade, porque ele tem cuidado de vocês.", referencia: "1 Pedro 5:7", imagem: U + "photo-1433086966358-54859d0ed716?w=1920" },
+      { texto: "Esperei confiantemente pelo Senhor; ele se inclinou para mim e ouviu o meu clamor.", referencia: "Salmos 40:1", imagem: U + "photo-1505852679233-d9fd70aff56d?w=1920" },
+      { texto: "O Senhor é a minha luz e a minha salvação; de quem terei temor?", referencia: "Salmos 27:1", imagem: U + "photo-1419242902214-272b3f66ee7a?w=1920" },
+      { texto: "Pois eu sei os planos que tenho para vocês, planos de fazê-los prosperar e não de causar dano, planos de dar a vocês esperança e um futuro.", referencia: "Jeremias 29:11", imagem: U + "photo-1447752875215-b2761acb3c5d?w=1920" },
+      { texto: "Ainda que eu ande pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo.", referencia: "Salmos 23:4", imagem: U + "photo-1501854140801-50d01698950b?w=1920" },
+      { texto: "Mas os que esperam no Senhor renovarão as suas forças; subirão com asas como águias.", referencia: "Isaías 40:31", imagem: U + "photo-1470252649378-9c29740c9fa8?w=1920" },
+      { texto: "Buscai primeiro o reino de Deus e a sua justiça, e todas essas coisas vos serão acrescentadas.", referencia: "Mateus 6:33", imagem: U + "photo-1426604966848-d7adac402bff?w=1920" },
+      { texto: "Em tudo dai graças, porque esta é a vontade de Deus em Cristo Jesus para convosco.", referencia: "1 Tessalonicenses 5:18", imagem: U + "photo-1502082553048-f009c37129b9?w=1920" }
+    ];
 
-<script>
-const U = "https://images.unsplash.com/";
+    const traducoes = {
+      en: [
+        "The Lord is my shepherd; I shall lack nothing.",
+        "I can do all things through him who gives me strength.",
+        "Commit your way to the Lord; trust in him, and he will act.",
+        "Do not fear, for I am with you; do not be dismayed, for I am your God.",
+        "Your word is a lamp for my feet, a light on my path.",
+        "Trust in the Lord with all your heart and do not rely on your own understanding.",
+        "Come to me, all who are weary and burdened, and I will give you rest.",
+        "Love is patient; love is kind.",
+        "Be strong and courageous. Do not be afraid or discouraged, for the Lord your God will be with you wherever you go.",
+        "I leave you peace; my peace I give you.",
+        "For God so loved the world that he gave his only Son, so that everyone who believes in him may not perish but have eternal life.",
+        "Rejoice in the Lord always; I will say it again: rejoice.",
+        "Cast all your anxiety on him, because he cares for you.",
+        "I waited patiently for the Lord; he turned toward me and heard my cry.",
+        "The Lord is my light and my salvation; whom shall I fear?",
+        "For I know the plans I have for you, plans to help you prosper and not to harm you, plans to give you hope and a future.",
+        "Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me.",
+        "Those who hope in the Lord will renew their strength; they will soar on wings like eagles.",
+        "Seek first the kingdom of God and his righteousness, and all these things will be given to you as well.",
+        "Give thanks in all circumstances, for this is God's will for you in Christ Jesus."
+      ],
+      es: [
+        "El Señor es mi pastor; nada me faltará.",
+        "Todo lo puedo en aquel que me fortalece.",
+        "Encomienda al Señor tu camino; confía en él, y él actuará.",
+        "No temas, porque yo estoy contigo; no te desalientes, porque yo soy tu Dios.",
+        "Tu palabra es una lámpara a mis pies y una luz en mi camino.",
+        "Confía en el Señor con todo tu corazón y no te apoyes en tu propia prudencia.",
+        "Vengan a mí todos los que están cansados y agobiados, y yo les daré descanso.",
+        "El amor es paciente y bondadoso.",
+        "Sé fuerte y valiente. No tengas miedo ni te desanimes, porque el Señor tu Dios estará contigo dondequiera que vayas.",
+        "La paz les dejo; mi paz les doy.",
+        "Porque Dios amó tanto al mundo que dio a su Hijo único, para que todo el que cree en él no perezca, sino que tenga vida eterna.",
+        "Alégrense siempre en el Señor; lo repito: ¡alégrense!",
+        "Depositen en él toda ansiedad, porque él cuida de ustedes.",
+        "Esperé pacientemente al Señor; él se inclinó hacia mí y escuchó mi clamor.",
+        "El Señor es mi luz y mi salvación; ¿a quién temeré?",
+        "Yo sé los planes que tengo para ustedes: planes para su bienestar y no para su mal, para darles esperanza y un futuro.",
+        "Aunque camine por el valle de sombra de muerte, no temeré mal alguno, porque tú estás conmigo.",
+        "Los que esperan en el Señor renovarán sus fuerzas; levantarán alas como las águilas.",
+        "Busquen primero el reino de Dios y su justicia, y todas estas cosas les serán añadidas.",
+        "Den gracias en toda circunstancia, porque esta es la voluntad de Dios para ustedes en Cristo Jesús."
+      ],
+      fr: [
+        "L'Éternel est mon berger : je ne manquerai de rien.",
+        "Je peux tout grâce à celui qui me fortifie.",
+        "Remets ta voie à l'Éternel, fais-lui confiance, et il agira.",
+        "Ne crains pas, car je suis avec toi ; ne sois pas troublé, car je suis ton Dieu.",
+        "Ta parole est une lampe à mes pieds et une lumière sur mon chemin.",
+        "Confie-toi en l'Éternel de tout ton cœur et ne t'appuie pas sur ta propre intelligence.",
+        "Venez à moi, vous tous qui êtes fatigués et chargés, et je vous donnerai du repos.",
+        "L'amour est patient, l'amour est plein de bonté.",
+        "Sois fort et courageux. Ne crains pas et ne te décourage pas, car l'Éternel, ton Dieu, sera avec toi partout où tu iras.",
+        "Je vous laisse la paix, je vous donne ma paix.",
+        "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que quiconque croit en lui ne périsse pas, mais ait la vie éternelle.",
+        "Réjouissez-vous toujours dans le Seigneur ; je le répète, réjouissez-vous !",
+        "Déchargez-vous sur lui de tous vos soucis, car il prend soin de vous.",
+        "J'ai patiemment attendu l'Éternel ; il s'est penché vers moi et a entendu mon cri.",
+        "L'Éternel est ma lumière et mon salut : de qui aurais-je peur ?",
+        "Je connais les projets que j'ai formés pour vous : des projets de paix et non de malheur, afin de vous donner un avenir et de l'espérance.",
+        "Même si je marche dans la vallée de l'ombre de la mort, je ne crains aucun mal, car tu es avec moi.",
+        "Ceux qui espèrent en l'Éternel renouvellent leur force ; ils prennent leur envol comme les aigles.",
+        "Cherchez d'abord le royaume de Dieu et sa justice, et tout cela vous sera donné en plus.",
+        "Rendez grâce en toute circonstance, car telle est la volonté de Dieu pour vous en Jésus-Christ."
+      ]
+    };
 
-const versiculos = [
-  { texto: "O Senhor é o meu pastor; nada me faltará.", referencia: "Salmos 23:1", imagem: U + "photo-1500382017468-9049fed747ef?w=1920" },
-  { texto: "Tudo posso naquele que me fortalece.", referencia: "Filipenses 4:13", imagem: U + "photo-1506905925346-21bda4d32df4?w=1920" },
-  { texto: "Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.", referencia: "Salmos 37:5", imagem: U + "photo-1469474968028-56623f02e42e?w=1920" },
-  { texto: "Não temas, porque eu sou contigo; não te assombres, porque eu sou o teu Deus.", referencia: "Isaías 41:10", imagem: U + "photo-1470071459604-3b5ec3a7fe05?w=1920" },
-  { texto: "Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.", referencia: "Salmos 119:105", imagem: U + "photo-1472214103451-9374bd1c798e?w=1920" },
-  { texto: "Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento.", referencia: "Provérbios 3:5", imagem: U + "photo-1441974231531-c6227db76b6e?w=1920" },
-  { texto: "Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.", referencia: "Mateus 11:28", imagem: U + "photo-1507525428034-b723cf961d3e?w=1920" },
-  { texto: "O amor é paciente, o amor é bondoso.", referencia: "1 Coríntios 13:4", imagem: U + "photo-1501785888041-af3ef285b470?w=1920" },
-  { texto: "Seja forte e corajoso! Não se apavore, pois o Senhor, o seu Deus, estará com você por onde você andar.", referencia: "Josué 1:9", imagem: U + "photo-1464822759023-fed622ff2c3b?w=1920" },
-  { texto: "Deixo-vos a paz, a minha paz vos dou.", referencia: "João 14:27", imagem: U + "photo-1476514525535-07fb3b4ae5f1?w=1920" },
-  { texto: "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna.", referencia: "João 3:16", imagem: U + "photo-1518837695005-2083093ee35b?w=1920" },
-  { texto: "Alegrai-vos sempre no Senhor; outra vez digo: alegrai-vos.", referencia: "Filipenses 4:4", imagem: U + "photo-1490730141103-6cac27aaab94?w=1920" },
-  { texto: "Lancem sobre ele toda a sua ansiedade, porque ele tem cuidado de vocês.", referencia: "1 Pedro 5:7", imagem: U + "photo-1433086966358-54859d0ed716?w=1920" },
-  { texto: "Esperei confiantemente pelo Senhor; ele se inclinou para mim e ouviu o meu clamor.", referencia: "Salmos 40:1", imagem: U + "photo-1505852679233-d9fd70aff56d?w=1920" },
-  { texto: "O Senhor é a minha luz e a minha salvação; de quem terei temor?", referencia: "Salmos 27:1", imagem: U + "photo-1419242902214-272b3f66ee7a?w=1920" },
-  { texto: "Pois eu sei os planos que tenho para vocês, planos de fazê-los prosperar e não de causar dano, planos de dar a vocês esperança e um futuro.", referencia: "Jeremias 29:11", imagem: U + "photo-1447752875215-b2761acb3c5d?w=1920" },
-  { texto: "Ainda que eu ande pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo.", referencia: "Salmos 23:4", imagem: U + "photo-1501854140801-50d01698950b?w=1920" },
-  { texto: "Mas os que esperam no Senhor renovarão as suas forças; subirão com asas como águias.", referencia: "Isaías 40:31", imagem: U + "photo-1470252649378-9c29740c9fa8?w=1920" },
-  { texto: "Buscai primeiro o reino de Deus e a sua justiça, e todas essas coisas vos serão acrescentadas.", referencia: "Mateus 6:33", imagem: U + "photo-1426604966848-d7adac402bff?w=1920" },
-  { texto: "Em tudo dai graças, porque esta é a vontade de Deus em Cristo Jesus para convosco.", referencia: "1 Tessalonicenses 5:18", imagem: U + "photo-1502082553048-f009c37129b9?w=1920" },
-  { texto: "Aquietai-vos e sabei que eu sou Deus.", referencia: "Salmos 46:10", imagem: U + "photo-1469854523086-cc02fe5d8800?w=1920" }
-];
+    const textos = {
+      pt: {
+        title: "Versículo do Dia", language: "Idioma", favorites: "⭐ Favoritos", newVerse: "Sortear outro",
+        favorite: "Favoritar ⭐", share: "Compartilhar 📋", listen: "🔊 Ouvir",
+        stop: "⏹ Parar", voice: "Voz", automatic: "Automática",
+        speed: "Velocidade", close: "Fechar ✕", favoritesTitle: "Meus favoritos",
+        empty: "Nenhum favorito ainda.", remove: "Remover",
+        alreadyFavorite: "Esse versículo já está nos favoritos",
+        added: "Adicionado aos favoritos ⭐", copied: "Versículo copiado! 📋",
+        copyFailed: "Não consegui copiar", copyUnsupported: "Seu navegador não permite copiar",
+        speechUnsupported: "Seu navegador não oferece leitura em voz alta."
+      },
+      en: {
+        title: "Verse of the Day", language: "Language", favorites: "⭐ Favorites", newVerse: "Draw another",
+        favorite: "Add to favorites ⭐", share: "Share 📋", listen: "🔊 Listen",
+        stop: "⏹ Stop", voice: "Voice", automatic: "Automatic",
+        speed: "Speed", close: "Close ✕", favoritesTitle: "My favorites",
+        empty: "No favorites yet.", remove: "Remove",
+        alreadyFavorite: "This verse is already in your favorites",
+        added: "Added to favorites ⭐", copied: "Verse copied! 📋",
+        copyFailed: "Could not copy", copyUnsupported: "Your browser does not allow copying",
+        speechUnsupported: "Your browser does not support speech playback."
+      },
+      es: {
+        title: "Versículo del Día", language: "Idioma", favorites: "⭐ Favoritos", newVerse: "Sortear otro",
+        favorite: "Añadir a favoritos ⭐", share: "Compartir 📋", listen: "🔊 Escuchar",
+        stop: "⏹ Detener", voice: "Voz", automatic: "Automática",
+        speed: "Velocidad", close: "Cerrar ✕", favoritesTitle: "Mis favoritos",
+        empty: "Aún no hay favoritos.", remove: "Quitar",
+        alreadyFavorite: "Este versículo ya está en tus favoritos",
+        added: "Añadido a favoritos ⭐", copied: "¡Versículo copiado! 📋",
+        copyFailed: "No se pudo copiar", copyUnsupported: "Tu navegador no permite copiar",
+        speechUnsupported: "Tu navegador no admite la lectura en voz alta."
+      },
+      fr: {
+        title: "Verset du Jour", language: "Langue", favorites: "⭐ Favoris", newVerse: "Tirer un autre",
+        favorite: "Ajouter aux favoris ⭐", share: "Partager 📋", listen: "🔊 Écouter",
+        stop: "⏹ Arrêter", voice: "Voix", automatic: "Automatique",
+        speed: "Vitesse", close: "Fermer ✕", favoritesTitle: "Mes favoris",
+        empty: "Aucun favori pour le moment.", remove: "Supprimer",
+        alreadyFavorite: "Ce verset est déjà dans vos favoris",
+        added: "Ajouté aux favoris ⭐", copied: "Verset copié ! 📋",
+        copyFailed: "Impossible de copier", copyUnsupported: "Votre navigateur ne permet pas la copie",
+        speechUnsupported: "Votre navigateur ne prend pas en charge la lecture vocale."
+      }
+    };
 
-const frasesAbertura = [
-  "Uma palavra para o seu dia",
-  "Respire fundo e leia",
-  "Um recado de esperança",
-  "Para guardar no coração"
-];
+    const idiomasVoz = { pt: "pt", en: "en", es: "es", fr: "fr" };
+    const nomesLivros = {
+      en: {
+        "Salmos": "Psalms", "Filipenses": "Philippians", "Isaías": "Isaiah",
+        "Provérbios": "Proverbs", "Mateus": "Matthew", "1 Coríntios": "1 Corinthians",
+        "João": "John", "Jeremias": "Jeremiah", "1 Pedro": "1 Peter",
+        "1 Tessalonicenses": "1 Thessalonians"
+      },
+      es: {
+        "Salmos": "Salmos", "Filipenses": "Filipenses", "Isaías": "Isaías",
+        "Provérbios": "Proverbios", "Mateus": "Mateo", "1 Coríntios": "1 Corintios",
+        "João": "Juan", "Jeremias": "Jeremías", "1 Pedro": "1 Pedro",
+        "1 Tessalonicenses": "1 Tesalonicenses"
+      },
+      fr: {
+        "Salmos": "Psaumes", "Filipenses": "Philippiens", "Isaías": "Ésaïe",
+        "Provérbios": "Proverbes", "Mateus": "Matthieu", "1 Coríntios": "1 Corinthiens",
+        "João": "Jean", "Jeremias": "Jérémie", "1 Pedro": "1 Pierre",
+        "1 Tessalonicenses": "1 Thessaloniciens"
+      }
+    };
 
-const elAbertura = document.getElementById("abertura");
-const elTexto = document.getElementById("texto");
-const elRef = document.getElementById("referencia");
-const elBloco = document.getElementById("bloco-versiculo");
-const elLista = document.getElementById("lista-favoritos");
-const elPainel = document.getElementById("painel");
-const elAviso = document.getElementById("aviso");
-const elTema = document.getElementById("btn-tema");
-const fundos = [document.getElementById("fundo1"), document.getElementById("fundo2")];
+    const elTexto = document.getElementById("texto");
+    const elRef = document.getElementById("referencia");
+    const elBloco = document.getElementById("bloco-versiculo");
+    const elLista = document.getElementById("lista-favoritos");
+    const elPainel = document.getElementById("painel");
+    const elAviso = document.getElementById("aviso");
+    const elIdioma = document.getElementById("idioma");
+    const elVoz = document.getElementById("voz");
+    const elVelocidade = document.getElementById("velocidade");
+    const elVelocidadeValor = document.getElementById("velocidade-valor");
+    const elBtnOuvir = document.getElementById("btn-ouvir");
+    const fundos = [document.getElementById("fundo1"), document.getElementById("fundo2")];
+    let fundoAtivo = 0;
+    let atual = null;
+    let ocupado = false;
+    let vozes = [];
+    let falando = false;
 
-let fundoAtivo = 0;
-let atual = null;
-let ocupado = false;
+    function idiomaAtual() {
+      return elIdioma.value;
+    }
 
-function avisar(mensagem) {
-  elAviso.textContent = mensagem;
-  elAviso.classList.add("mostrar");
-  setTimeout(() => elAviso.classList.remove("mostrar"), 2000);
-}
+    function textoDaChave(chave) {
+      return textos[idiomaAtual()][chave];
+    }
 
-// ---- Tema claro / escuro (fica salvo no navegador) ----
-function aplicarTema(claro) {
-  document.body.classList.toggle("claro", claro);
-  elTema.textContent = claro ? "☀️ Tema" : "🌙 Tema";
-  localStorage.setItem("tema", claro ? "claro" : "escuro");
-}
+    function textoDoVersiculo(versiculo) {
+      const indice = versiculos.indexOf(versiculo);
+      return idiomaAtual() === "pt" ? versiculo.texto : (traducoes[idiomaAtual()][indice] || versiculo.texto);
+    }
 
-elTema.onclick = () => aplicarTema(!document.body.classList.contains("claro"));
+    function referenciaDoVersiculo(versiculo) {
+      if (idiomaAtual() === "pt") return versiculo.referencia;
+      const partes = versiculo.referencia.match(/^(.+?)\s+(.+)$/);
+      if (!partes) return versiculo.referencia;
+      const livro = nomesLivros[idiomaAtual()][partes[1]] || partes[1];
+      return livro + " " + partes[2];
+    }
 
-function trocarFundo(url) {
-  const proximo = 1 - fundoAtivo;
-  const novo = fundos[proximo];
-  const velho = fundos[fundoAtivo];
-  novo.style.backgroundImage = "url('" + url + "')";
-  novo.classList.remove("visivel");
-  void novo.offsetWidth;
-  novo.classList.add("visivel");
-  velho.classList.remove("visivel");
-  fundoAtivo = proximo;
-}
+    function avisar(mensagem) {
+      elAviso.textContent = mensagem;
+      elAviso.classList.add("mostrar");
+      setTimeout(() => elAviso.classList.remove("mostrar"), 2000);
+    }
 
-function escolherNovo() {
-  let novo;
-  do {
-    novo = versiculos[Math.floor(Math.random() * versiculos.length)];
-  } while (novo === atual && versiculos.length > 1);
-  return novo;
-}
+    function trocarFundo(url) {
+      const proximo = 1 - fundoAtivo;
+      const novo = fundos[proximo];
+      const velho = fundos[fundoAtivo];
+      novo.style.backgroundImage = "url('" + url + "')";
+      novo.classList.remove("visivel");
+      void novo.offsetWidth; // reinicia a animação
+      novo.classList.add("visivel");
+      velho.classList.remove("visivel");
+      fundoAtivo = proximo;
+    }
 
-function escolherAbertura() {
-  return frasesAbertura[Math.floor(Math.random() * frasesAbertura.length)];
-}
+    function escolherNovo() {
+      let novo;
+      do {
+        novo = versiculos[Math.floor(Math.random() * versiculos.length)];
+      } while (novo === atual && versiculos.length > 1);
+      return novo;
+    }
 
-function mostrar(versiculo, animar) {
-  atual = versiculo;
+    function mostrar(versiculo, animar) {
+      atual = versiculo;
+      const aplicar = () => {
+        renderizarVersiculo();
+        elBloco.classList.remove("saindo");
+        ocupado = false;
+      };
+      // Pré-carrega a imagem para a troca ficar suave
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        trocarFundo(atual.imagem);
+        if (animar) setTimeout(aplicar, 500); else aplicar();
+      };
+      if (animar) elBloco.classList.add("saindo");
+      img.src = atual.imagem;
+    }
 
-  const aplicar = () => {
-    elAbertura.textContent = escolherAbertura();
-    elTexto.textContent = "“" + atual.texto + "”";
-    elRef.textContent = atual.referencia;
-    elBloco.classList.remove("saindo");
-    ocupado = false;
-  };
+    function renderizarVersiculo() {
+      if (!atual) return;
+      elTexto.textContent = "“" + textoDoVersiculo(atual) + "”";
+      elRef.textContent = referenciaDoVersiculo(atual);
+    }
 
-  const img = new Image();
-  img.onload = img.onerror = () => {
-    trocarFundo(atual.imagem);
-    if (animar) setTimeout(aplicar, 500);
-    else aplicar();
-  };
-  if (animar) elBloco.classList.add("saindo");
-  img.src = atual.imagem;
-}
+    function sortear() {
+      if (ocupado) return;
+      ocupado = true;
+      mostrar(escolherNovo(), true);
+    }
 
-function sortear() {
-  if (ocupado) return;
-  ocupado = true;
-  mostrar(escolherNovo(), true);
-}
+    function lerFavoritos() {
+      return JSON.parse(localStorage.getItem("favoritos") || "[]");
+    }
 
-function lerFavoritos() {
-  return JSON.parse(localStorage.getItem("favoritos") || "[]");
-}
+    function salvarFavoritos(lista) {
+      localStorage.setItem("favoritos", JSON.stringify(lista));
+    }
 
-function salvarFavoritos(lista) {
-  localStorage.setItem("favoritos", JSON.stringify(lista));
-}
+    function mostrarFavoritos() {
+      const favoritos = lerFavoritos();
+      elLista.innerHTML = "";
+      if (favoritos.length === 0) {
+        const vazio = document.createElement("li");
+        vazio.textContent = textoDaChave("empty");
+        elLista.appendChild(vazio);
+        return;
+      }
+      favoritos.forEach((v, i) => {
+        const li = document.createElement("li");
+        const texto = document.createElement("span");
+        texto.textContent = "“" + textoDoVersiculo(v) + "”";
+        const referencia = document.createElement("small");
+        referencia.textContent = referenciaDoVersiculo(v);
+        li.append(texto, referencia);
+        const btn = document.createElement("button");
+        btn.textContent = textoDaChave("remove");
+        btn.className = "remover";
+        btn.onclick = () => {
+          const lista = lerFavoritos();
+          lista.splice(i, 1);
+          salvarFavoritos(lista);
+          mostrarFavoritos();
+        };
+        li.appendChild(btn);
+        elLista.appendChild(li);
+      });
+    }
 
-function mostrarFavoritos() {
-  const favoritos = lerFavoritos();
-  elLista.innerHTML = "";
-  if (favoritos.length === 0) {
-    elLista.innerHTML = "<li>Nenhum favorito ainda.</li>";
-    return;
-  }
-  favoritos.forEach((v, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = "“" + v.texto + "”<small>" + v.referencia + "</small>";
-    const btn = document.createElement("button");
-    btn.textContent = "Remover";
-    btn.className = "remover";
-    btn.onclick = () => {
+    function pararLeitura() {
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      falando = false;
+      elBtnOuvir.textContent = textoDaChave("listen");
+    }
+
+    function atualizarVozes() {
+      if (!("speechSynthesis" in window)) return;
+      vozes = window.speechSynthesis.getVoices();
+      const selecionada = elVoz.value;
+      const prefixo = idiomasVoz[idiomaAtual()];
+      const compativeis = vozes.filter(v => v.lang.toLowerCase().startsWith(prefixo));
+      const lista = compativeis.length ? compativeis : vozes;
+      elVoz.replaceChildren();
+      const automatica = document.createElement("option");
+      automatica.value = "";
+      automatica.textContent = textoDaChave("automatic");
+      elVoz.appendChild(automatica);
+      lista.forEach(voz => {
+        const opcao = document.createElement("option");
+        opcao.value = voz.voiceURI;
+        opcao.textContent = voz.name + " (" + voz.lang + ")";
+        elVoz.appendChild(opcao);
+      });
+      if (lista.some(v => v.voiceURI === selecionada)) elVoz.value = selecionada;
+    }
+
+    function ouvirVersiculo() {
+      if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+        avisar(textoDaChave("speechUnsupported"));
+        return;
+      }
+      if (falando) {
+        pararLeitura();
+        return;
+      }
+      const fala = new SpeechSynthesisUtterance(textoDoVersiculo(atual) + ". " + referenciaDoVersiculo(atual));
+      fala.lang = idiomaAtual() === "pt" ? "pt-BR" : idiomaAtual();
+      fala.rate = Number(elVelocidade.value);
+      fala.voice = vozes.find(v => v.voiceURI === elVoz.value) || null;
+      fala.onend = () => {
+        falando = false;
+        elBtnOuvir.textContent = textoDaChave("listen");
+      };
+      fala.onerror = evento => {
+        falando = false;
+        elBtnOuvir.textContent = textoDaChave("listen");
+        if (evento.error !== "canceled") avisar(textoDaChave("speechUnsupported"));
+      };
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(fala);
+      falando = true;
+      elBtnOuvir.textContent = textoDaChave("stop");
+    }
+
+    function atualizarInterface() {
+      const idioma = idiomaAtual();
+      const textosInterface = textos[idioma];
+      document.documentElement.lang = idioma === "pt" ? "pt-BR" : idioma;
+      document.title = textosInterface.title;
+      document.getElementById("btn-abrir-favoritos").textContent = textosInterface.favorites;
+      document.getElementById("btn-novo").textContent = textosInterface.newVerse;
+      document.getElementById("btn-favoritar").textContent = textosInterface.favorite;
+      document.getElementById("btn-compartilhar").textContent = textosInterface.share;
+      document.getElementById("rotulo-idioma").textContent = textosInterface.language;
+      document.getElementById("painel-titulo").textContent = textosInterface.favoritesTitle;
+      document.getElementById("btn-fechar").textContent = textosInterface.close;
+      document.getElementById("rotulo-voz").textContent = textosInterface.voice;
+      document.getElementById("rotulo-velocidade").textContent = textosInterface.speed;
+      pararLeitura();
+      atualizarVozes();
+      renderizarVersiculo();
+      mostrarFavoritos();
+    }
+
+    document.getElementById("btn-novo").onclick = sortear;
+
+    document.getElementById("btn-favoritar").onclick = () => {
       const lista = lerFavoritos();
-      lista.splice(i, 1);
+      if (lista.some(v => v.referencia === atual.referencia)) {
+        avisar(textoDaChave("alreadyFavorite"));
+        return;
+      }
+      lista.push(atual);
       salvarFavoritos(lista);
       mostrarFavoritos();
+      avisar(textoDaChave("added"));
     };
-    li.appendChild(btn);
-    elLista.appendChild(li);
-  });
-}
 
-document.getElementById("btn-novo").onclick = sortear;
+    document.getElementById("btn-compartilhar").onclick = () => {
+      const mensagem = "“" + textoDoVersiculo(atual) + "” — " + referenciaDoVersiculo(atual);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(mensagem).then(
+          () => avisar(textoDaChave("copied")),
+          () => avisar(textoDaChave("copyFailed"))
+        );
+      } else {
+        avisar(textoDaChave("copyUnsupported"));
+      }
+    };
 
-document.getElementById("btn-favoritar").onclick = () => {
-  const lista = lerFavoritos();
-  if (lista.some(v => v.referencia === atual.referencia)) {
-    avisar("Esse versículo já está nos favoritos");
-    return;
-  }
-  lista.push(atual);
-  salvarFavoritos(lista);
-  mostrarFavoritos();
-  avisar("Adicionado aos favoritos ⭐");
-};
+    document.getElementById("btn-abrir-favoritos").onclick = () => elPainel.classList.add("aberto");
+    document.getElementById("btn-fechar").onclick = () => elPainel.classList.remove("aberto");
+    elIdioma.onchange = atualizarInterface;
+    elBtnOuvir.onclick = ouvirVersiculo;
+    elVoz.onchange = pararLeitura;
+    elVelocidade.oninput = () => {
+      elVelocidadeValor.textContent = Number(elVelocidade.value).toLocaleString(idiomaAtual()) + "×";
+    };
 
-document.getElementById("btn-compartilhar").onclick = () => {
-  const mensagem = "“" + atual.texto + "” — " + atual.referencia;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(mensagem).then(
-      () => avisar("Versículo copiado! 📋"),
-      () => avisar("Não consegui copiar")
-    );
-  } else {
-    avisar("Seu navegador não permite copiar");
-  }
-};
+    // Atalhos do teclado: espaço ou seta pra direita sorteia outro
+    document.addEventListener("keydown", (e) => {
+      if ((e.code === "Space" || e.code === "ArrowRight") &&
+          !["BUTTON", "INPUT", "SELECT"].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        sortear();
+      }
+    });
 
-document.getElementById("btn-abrir-favoritos").onclick = () => elPainel.classList.add("aberto");
-document.getElementById("btn-fechar").onclick = () => elPainel.classList.remove("aberto");
-
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space" || e.code === "ArrowRight") {
-    e.preventDefault();
-    sortear();
-  }
-});
-
-aplicarTema(localStorage.getItem("tema") === "claro");
-mostrar(escolherNovo(), false);
-mostrarFavoritos();
-</script>
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = atualizarVozes;
+    }
+    atualizarInterface();
+    mostrar(escolherNovo(), false);
+  </script>
 </body>
 </html>
